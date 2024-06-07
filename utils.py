@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import requests
 
 # Fonction pour afficher les détails du post
