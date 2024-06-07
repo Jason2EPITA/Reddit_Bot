@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 import praw
+from datetime import datetime
 # Charger les variables d'environnement à partir du fichier .env
 load_dotenv()
 
@@ -58,3 +59,23 @@ for post in recent_posts:
 with open(replied_posts_file, "w") as file:
     for post_id in replied_posts:
         file.write(post_id + "\n")
+
+
+# Fonction pour afficher les détails du post
+def print_post_details(post):
+    author = post.author.name if post.author else "N/A"
+    created_utc = datetime.utcfromtimestamp(post.created_utc).strftime('%Y-%m-%d %H:%M:%S')
+    print("*****Nouveau post détecté*****")
+    # print(f"** Nouveau post détecté **")
+    print(f"Titre: {post.title}")
+    print(f"Auteur: {author}")
+    print(f"Date de création (UTC): {created_utc}")
+    # print(f"URL: {post.url}")
+    print(f"Texte du post: {post.selftext}")
+    print("\n")
+
+# Écouter en permanence les nouveaux posts dans la communauté r/all
+communitie = "all" # Écouter les nouveaux posts dans la communauté r/all (all c toute les communautés)
+subreddit = reddit_instance.subreddit(communitie)
+for post in subreddit.stream.submissions(skip_existing=True):
+    print_post_details(post)
