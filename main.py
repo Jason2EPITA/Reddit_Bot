@@ -50,15 +50,15 @@ def solve_sudoku_reddit(problem_statement: str) -> str:
 def solve_plan_reddit(problem_statement: str) -> str:
     response = get_planning_sat_input(problem_statement)
     variables, clauses = parse_json_response(response)
-    print("VARIABLES : ", variables)
-    print("CLAUSES : ", clauses)
+    # print("VARIABLES : ", variables)
+    # print("CLAUSES : ", clauses)
     variable_names = {i+1: var_name for i, var_name in enumerate(variables.keys())}
     solution1 = solve_sat(clauses)
     solution2 = afficher_solution(solution1,variables, variable_names)
-    print("SOLUTION : ", solution2)
+    # print("SOLUTION : ", solution2)
     final_prompt = f"Voici la question initial : {problem_statement}.La solution au problème est la suivante: {solution2}. Reformulez la réponse pour qu'elle soit bien présentée."
     final_response = llm2.invoke(final_prompt.format(solution=solution2)).content
-    print("final_response : ", final_response)
+    # print("final_response : ", final_response)
     return final_response
 
 
@@ -68,27 +68,26 @@ def handle_post(post):
         print_post_details(post)
         problem_statement = post.selftext
         response = solve_csp_reddit(problem_statement)
-        print(response)
-        # post.reply(response)
+        # print(response)
+        post.reply(response)
     elif re.search(r"@botSCIA\s+/plan$", title):
         print_post_details(post)
         problem_statement = post.selftext
         response = solve_plan_reddit(problem_statement)
-        # post.reply(response)
-        print(response)
+        post.reply(response)
+        # print(response)
         print("Répondu au post.")
     elif re.search(r"@botSCIA\s+/sudoku$", title):
         print_post_details(post)
         sudoku_text = post.selftext
         response = solve_sudoku_reddit(sudoku_text)
-        # post.reply(response)
-        print(response)
+        post.reply(response)
         print("Répondu au post.")
     elif re.search(r"@botSCIA\s*(/[^ ]+)?$", title):
         print_post_details(post)
         response = llm2.invoke(post.selftext).content
-        print(response)
-        # post.reply(response)
+        # print(response)
+        post.reply(response)
         print("Répondu au post.")
 for post in subreddit.stream.submissions(skip_existing=True):
     handle_post(post)
