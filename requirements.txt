@@ -20,6 +20,7 @@ jsonpatch==1.33
 jsonpointer==2.4
 langchain==0.2.3
 langchain-core==0.2.5
+langchain-openai==0.1.8
 langchain-text-splitters==0.2.1
 langsmith==0.1.75
 multidict==6.0.5
@@ -32,17 +33,20 @@ pandas==2.2.2
 praw==7.7.1
 prawcore==2.4.0
 protobuf==5.27.1
+PuLP==2.8.0
 pydantic==2.7.3
 pydantic_core==2.18.4
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2024.1
 PyYAML==6.0.1
+regex==2024.5.15
 requests==2.32.3
 six==1.16.0
 sniffio==1.3.1
 SQLAlchemy==2.0.30
 tenacity==8.3.0
+tiktoken==0.7.0
 tqdm==4.66.4
 typing_extensions==4.12.2
 tzdata==2024.1
@@ -50,4 +54,3 @@ update-checker==0.18.0
 urllib3==2.2.1
 websocket-client==1.8.0
 yarl==1.9.4
-langchain_openai==1.0.0
