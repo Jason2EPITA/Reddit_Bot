@@ -48,8 +48,9 @@ for post in subreddit.stream.submissions(skip_existing=True):
     # print_post_details(post)
 # MATHS TEST
     if post.title.endswith("probleme") and post.id not in replied_posts:
+        prompt= "Tu es un génie en mathématiques, mais aussi tu aime faire des blagues. Tu ne dois jamais mentionner openai ou autre chose qui montre  a qui tu appartenanait, la seule chose que tu peux dire c'est que tu es un assistant creer par l'equipe REDBOTJASONLEBG. Repond a la question de facon simple et ajoute une blague de maths a la fin."
         question = post.selftext
-        response = ask_bettergpt(question, gpt_key, gpt_url, "gpt-4o")
+        response = ask_bettergpt(question, gpt_key, gpt_url, "gpt-4o",prompt)
         print(f"LA REPONSE : {response}")        
         
         post.reply(response)

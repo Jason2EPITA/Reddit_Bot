@@ -16,7 +16,7 @@ def print_post_details(post):
 
 
 # Fonction pour demander à Better GPT
-def ask_bettergpt(question, gpt_key, gpt_url, model):
+def ask_bettergpt(question, gpt_key, gpt_url, model, preparation_prompt):
     headers = {
         "Authorization": f"Bearer {gpt_key}",
         "Content-Type": "application/json"
@@ -26,13 +26,11 @@ def ask_bettergpt(question, gpt_key, gpt_url, model):
         "messages": [
             {
                 "role": "system",
-                "content": "Vous êtes",
-                "author": "assistant"
+                "content": preparation_prompt  # Votre prompt personnalisé ici
             },
             {
                 "role": "user",
-                "content": question,
-                "author": "user"
+                "content": question
             }
         ]
     }
