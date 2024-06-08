@@ -104,10 +104,10 @@ def solver_csp(variables: list[str], constraints: list[str]) -> str:
 
     result = "\nSolutions trouvées:\n"
     solutions = solution_printer.solutions()
-    if solutions:
+    if len(solutions) > 1:
         for solution in solutions:
             result += "  " + ", ".join(f"{var} = {value}" for var, value in solution.items()) + "\n"
     else:
-        result += "  Aucune solution trouvée.\n"
+        result = "\nAucune solution trouvée.\n"
 
     return result

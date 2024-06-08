@@ -3,7 +3,7 @@ import praw
 from utils import print_post_details
 from config import username, client_id, client_secret, password, openai_api_key, gpt_key, llm
 
-#Initialiser l'instance Reddit
+# Initialiser l'instance Reddit
 reddit_instance = praw.Reddit(
     client_id=client_id,
     client_secret=client_secret,
@@ -22,9 +22,17 @@ for post in subreddit.stream.submissions(skip_existing=True):
         response = get_solver_input(problem_statement)
         variables, constraints = parse_response(response)
         solution = solver_csp(variables, constraints)
-        final_prompt = f"La solution au problème est la suivante: {solution}. Reformulez la réponse pour qu'elle soit bien présentée."
-        final_response = llm.invoke(final_prompt.format(solution=solution))
+
+        if (solution != "\nAucune solution trouvée.\n"):
+            print(f"ici: {solution}.")
+            final_prompt = f"La solution au problème est la suivante: {solution}. Reformulez la réponse pour qu'elle soit bien présentée."
+            final_response = llm.invoke(final_prompt.format(solution=solution))
+            final_response += "\n\n(Avec utilisation du solveur CSP)\n"
+        else:
+            final_prompt = f"Voici le probleme {problem_statement}\n Résout le probleme stp."
+            final_response = llm.invoke(final_prompt.format(solution=solution))
         post.reply(final_response)
+
         print("Répondu au post.")
 
 
@@ -51,7 +59,7 @@ for post in subreddit.stream.submissions(skip_existing=True):
 # """
 
 # # Choisir le problème à résoudre
-# problem_statement = problem1
+# problem_statement = problem3
 
 # print("LE PROBLEME DE REDDIT : ", problem_statement)
 
@@ -67,4 +75,14 @@ for post in subreddit.stream.submissions(skip_existing=True):
 # # Utiliser les variables et contraintes avec le solver
 # solution = solver_csp(variables, constraints)
 
-# print(solution)
+# if (solution != "\nAucune solution trouvée.\n"):
+#     print(f"ici: {solution}.")
+#     final_prompt = f"La solution au problème est la suivante: {solution}. Reformulez la réponse pour qu'elle soit bien présentée."
+#     final_response = llm.invoke(final_prompt.format(solution=solution))
+#     print("finale_response WITH OUR SOLVER: ", final_response)
+# else:
+#     final_prompt = f"Voici le probleme {problem_statement}\n Résout le probleme avec une petite phrase stp."
+#     final_response = llm.invoke(final_prompt.format(solution=solution))
+#     print("finale_response of GPT ONLY: ", final_response)
+
+# # print(solution)
