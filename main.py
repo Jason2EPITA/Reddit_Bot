@@ -5,6 +5,7 @@ from utils import print_post_details
 from config import username, client_id, client_secret, password, openai_api_key, gpt_key, llm, install_glpk_package,llm2
 from timeit import default_timer as timer
 import numpy as np
+import re
 # install_glpk_package() # Installer le paquet GLPK
 
 # Initialiser l'instance Reddit
@@ -51,8 +52,9 @@ def solve_plan_reddit(problem_statement: str) -> str:
     variables, clauses = parse_json_response(response)
     print("VARIABLES : ", variables)
     print("CLAUSES : ", clauses)
+    variable_names = {i+1: var_name for i, var_name in enumerate(variables.keys())}
     solution1 = solve_sat(clauses)
-    solution2 = afficher_solution(solution1,variables)
+    solution2 = afficher_solution(solution1,variables, variable_names)
     print("SOLUTION : ", solution2)
     final_prompt = f"Voici la question initial : {problem_statement}.La solution au problème est la suivante: {solution2}. Reformulez la réponse pour qu'elle soit bien présentée."
     final_response = llm2.invoke(final_prompt.format(solution=solution2)).content
@@ -60,28 +62,39 @@ def solve_plan_reddit(problem_statement: str) -> str:
     return final_response
 
 
-for post in subreddit.stream.submissions(skip_existing=True):
-    if post.title.endswith("probleme"):
+def handle_post(post):
+    title = post.title
+    if re.search(r"@botSCIA\s+/probleme$", title):
         print_post_details(post)
         problem_statement = post.selftext
         response = solve_csp_reddit(problem_statement)
-        post.reply(response)
-    if post.title.endswith("Plan"):
+        print(response)
+        # post.reply(response)
+    elif re.search(r"@botSCIA\s+/plan$", title):
         print_post_details(post)
         problem_statement = post.selftext
         response = solve_plan_reddit(problem_statement)
-        post.reply(response)
+        # post.reply(response)
+        print(response)
         print("Répondu au post.")
-    elif post.title.endswith("sudoku"):
+    elif re.search(r"@botSCIA\s+/sudoku$", title):
         print_post_details(post)
         sudoku_text = post.selftext
         response = solve_sudoku_reddit(sudoku_text)
-        post.reply(response)
+        # post.reply(response)
+        print(response)
         print("Répondu au post.")
+    elif re.search(r"@botSCIA\s*(/[^ ]+)?$", title):
+        print_post_details(post)
+        response = llm2.invoke(post.selftext).content
+        print(response)
+        # post.reply(response)
+        print("Répondu au post.")
+for post in subreddit.stream.submissions(skip_existing=True):
+    handle_post(post)
+################################---POUR TESTER SANS REDDIT---######################################
 
-#################################---POUR TESTER SANS REDDIT---######################################
-
-# # CHOISI SI TU VEUX UN PROBLEME OU UN SUDOKU----------------------------------------------
+# CHOISI SI TU VEUX UN PROBLEME OU UN SUDOKU----------------------------------------------
 # problem1 = "Nous devons répartir trois personnes, Alice, Bob et Charlie, dans trois salles (0, 1, et 2) de manière à ce que : Alice et Bob ne soient pas dans la même salle. La somme des indices des salles occupées par Alice, Bob et Charlie soit égale à 3."
 # problem2 = "Vous devez vérifier s'il existe des entiers x et y tels que : x>5 𝑦<10 𝑥+𝑦=15"
 # problem3 = """
@@ -117,34 +130,56 @@ for post in subreddit.stream.submissions(skip_existing=True):
 # _ _ 4 | 3 2 _ | _ _ _
 # _ 6 2 | 9 _ 4 | _ _ _
 # """
+# problem5 = "Imaginons que nous avons quatre activités sportives A1, A2, A3 et A4 et trois créneaux horaires disponibles H1, H2 et H3. Nous voulons planifier ces activités de manière à ce que certains entraîneurs puissent les encadrer sans conflit d'horaire. Disons que :"
 
+# "L'activité A1 doit être encadrée par l'entraîneur E1."
+# "L'activité A2 doit être encadrée par l'entraîneur E2."
+# "L'activité A3 doit être encadrée par l'entraîneur E3 ou E4."
+# "L'activité A4 doit être encadrée par l'entraîneur E1 ou E3."
+# "De plus, les contraintes sont les suivantes :"
+
+# "Les activités A1 et A2 ne peuvent pas être programmées en même temps car E1 et E2 sont indisponibles en même temps."
+# "L'activité A3 doit être programmée à un créneau différent de A4 si c'est E3 qui l'encadre."
+# "L'activité A1 doit être programmée à un créneau différent de A4 si c'est E1 qui l'encadre."
 # # Choisir le problème à résoudre
-# problem_statement = problem3
+# problem_statement = problem5
 # print("LE PROBLEME DE REDDIT : ", problem_statement)
+# #PARTI PROBLEME PLAN -----------------------
 
-## PARTIE PROBLEME CSP ----------------------------------------------
-# # Obtenir la réponse de ChatGPT
-# # response = get_solver_input(problem_statement)
-# # print("Réponse de ChatGPT :\n", response)
-# # # Parser la réponse pour obtenir les variables et contraintes
-# # variables, constraints = parse_response_probleme_csp(response)
-# # print("\nVariables :", variables)
-# # print("Contraintes :", constraints)
-# # # Utiliser les variables et contraintes avec le solver
-# # solution = solver_csp(variables, constraints)
-# # if (solution != "\nAucune solution trouvée.\n"):
-# #     print(f"ici: {solution}.")
-# #     final_prompt = f"La solution au problème est la suivante: {solution}. Reformulez la réponse pour qu'elle soit bien présentée."
-# #     final_response = llm.invoke(final_prompt.format(solution=solution))
-# #     print("finale_response WITH OUR SOLVER: ", final_response)
-# # else:
-# #     final_prompt = f"Voici le probleme {problem_statement}\n Résout le probleme avec une petite phrase stp."
-# #     final_response = llm.invoke(final_prompt.format(solution=solution))
-# #     print("finale_response of GPT ONLY: ", final_response)
+# response = get_planning_sat_input(problem_statement)
+# variables, clauses = parse_json_response(response)
+# print("VARIABLES : ", variables)
+# print("CLAUSES : ", clauses)
+# variable_names = {i+1: var_name for i, var_name in enumerate(variables.keys())}
+# solution1 = solve_sat(clauses)
+# solution2 = afficher_solution(solution1,variables, variable_names)
+# print("SOLUTION : ", solution2)
+# final_prompt = f"Voici la question initial : {problem_statement}.La solution au problème est la suivante: {solution2}. Reformulez la réponse pour qu'elle soit bien présentée."
+# final_response = llm2.invoke(final_prompt.format(solution=solution2)).content
+# print("final_response : ", final_response)
+# PARTIE PROBLEME CSP ----------------------------------------------
+# Obtenir la réponse de ChatGPT
+# response = get_solver_input(problem_statement)
+# print("Réponse de ChatGPT :\n", response)
+# # Parser la réponse pour obtenir les variables et contraintes
+# variables, constraints = parse_response_probleme_csp(response)
+# print("\nVariables :", variables)
+# print("Contraintes :", constraints)
+# # Utiliser les variables et contraintes avec le solver
+# solution = solver_csp(variables, constraints)
+# if (solution != "\nAucune solution trouvée.\n"):
+#     print(f"ici: {solution}.")
+#     final_prompt = f"La solution au problème est la suivante: {solution}. Reformulez la réponse pour qu'elle soit bien présentée."
+#     final_response = llm.invoke(final_prompt.format(solution=solution))
+#     print("finale_response WITH OUR SOLVER: ", final_response)
+# else:
+#     final_prompt = f"Voici le probleme {problem_statement}\n Résout le probleme avec une petite phrase stp."
+#     final_response = llm.invoke(final_prompt.format(solution=solution))
+#     print("finale_response of GPT ONLY: ", final_response)
 
 
-## PARTIE SUDOKU CHOCO ----------------------------------------------
-# #Obtenir la réponse de ChatGPT
+# PARTIE SUDOKU CHOCO ----------------------------------------------
+#Obtenir la réponse de ChatGPT
 # response = get_solver_sudoku_input(problem_statement)
 # print("Réponse de ChatGPT :\n", response)
 # sudoku_grid = parse_sudoku_grid(problem_statement)

@@ -319,12 +319,12 @@ def solve_sat(clauses):
         else:
             return None
 
-def afficher_solution(solution, variables):
+def afficher_solution(solution, variables,variable_names):
     if solution:
         result = "La formule est satisfiable. Une assignation possible est :\n"
         for var in solution:
             if var > 0:
-                result += f"{var}: {variables['X' + str(var)]}\n"
+                result += f"{var}: {variable_names[var]} - {variables[variable_names[var]]}\n"
         return result.strip()
     else:
         return "La formule n'est pas satisfiable."
