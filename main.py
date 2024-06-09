@@ -17,9 +17,10 @@ reddit_instance = praw.Reddit(
     password=password
 )
 
-subreddit = reddit_instance.subreddit("testingground4bots")
-
-print("Listenning on Reddit - testingground4bots for new posts...")
+# Récupérer le subreddit
+subreddit_title = "testingground4bots"
+subreddit = reddit_instance.subreddit(subreddit_title)
+print(f'Listenning on Reddit - {subreddit_title} for new posts...')
 
 # Définir la fonction pour résoudre les problèmes CSP
 def solve_csp_reddit(problem_statement: str) -> str:
@@ -47,6 +48,8 @@ def solve_sudoku_reddit(problem_statement: str) -> str:
     # final_response = llm.invoke(final_prompt.format(solution=solution))
     final_response = solution
     return final_response
+
+# Définir la fonction pour résoudre les problèmes de planification sur Reddit
 def solve_plan_reddit(problem_statement: str) -> str:
     response = get_planning_sat_input(problem_statement)
     variables, clauses = parse_json_response(response)
@@ -61,7 +64,7 @@ def solve_plan_reddit(problem_statement: str) -> str:
     # print("final_response : ", final_response)
     return final_response
 
-
+# Définir la fonction pour gérer les nouveaux posts
 def handle_post(post):
     title = post.title
     if re.search(r"@botSCIA\s+/probleme$", title):
@@ -89,8 +92,11 @@ def handle_post(post):
         # print(response)
         post.reply(response)
         print("Répondu au post.")
+
+# Écouter les nouveaux posts
 for post in subreddit.stream.submissions(skip_existing=True):
     handle_post(post)
+
 ################################---POUR TESTER SANS REDDIT---######################################
 
 # CHOISI SI TU VEUX UN PROBLEME OU UN SUDOKU----------------------------------------------

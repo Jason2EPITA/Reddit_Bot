@@ -40,6 +40,7 @@ def get_solver_input(problem_statement: str) -> str:
     response = llm.invoke(prompt)  # Utilisation de invoke
     return response
 
+# Fonction pour envoyer un prompt à ChatGPT et obtenir la réponse pour un problème de sudoku
 def get_solver_sudoku_input(problem_statement: str) -> str:
     """
     Envoie un prompt à ChatGPT et obtient la réponse.
@@ -73,6 +74,7 @@ def get_solver_sudoku_input(problem_statement: str) -> str:
     response = llm.invoke(prompt)  # Utilisation de invoke
     return response
 
+# Fonction pour envoyer un prompt à ChatGPT et obtenir la réponse pour un problème de planification
 def get_planning_sat_input(problem_statement: str) -> str:
     """
     Envoie un prompt à ChatGPT et obtient la réponse pour un problème de planification.
@@ -142,6 +144,8 @@ def parse_response_probleme_csp(response: str) -> tuple[list[str], list[str]]:
     else:
         # Si aucune correspondance n'a été trouvée, renvoyer des valeurs par défaut
         return [], []
+    
+#Fonction pour parser la réponse de ChatGPT et extraire les variables et les contraintes en format JSON
 def parse_json_response(response: str) -> tuple[dict, list[list[int]]]:
     """
     Parse la réponse de ChatGPT pour extraire les variables et les contraintes.
@@ -168,6 +172,7 @@ def parse_json_response(response: str) -> tuple[dict, list[list[int]]]:
     variables = response["Variables"]
     clauses = response["Clauses CNF"]
     return variables, clauses
+
 #Fonction pour résoudre le problème CSP en utilisant les variables et les contraintes fournies
 def solver_csp(variables: list[str], constraints: list[str]) -> str:
     """
@@ -307,6 +312,7 @@ def parse_sudoku_grid(sudoku_string: str) -> tuple[tuple[int, ...], ...]:
         if row:  # Ajoute cette condition pour ignorer les lignes vides
             grid.append(tuple(row))
     return tuple(grid)
+
 # Utilisation de PySAT pour résoudre le problème SAT
 def solve_sat(clauses):
     with Solver(name='glucose3') as solver:
@@ -319,6 +325,7 @@ def solve_sat(clauses):
         else:
             return None
 
+# Fonction pour afficher la solution du problème SAT
 def afficher_solution(solution, variables,variable_names):
     if solution:
         result = "La formule est satisfiable. Une assignation possible est :\n"
