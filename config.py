@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from langchain_openai import OpenAI  # Importer OpenAI de langchain_openai
+from langchain_openai import OpenAI,ChatOpenAI  # Importer OpenAI de langchain_openai
 import sys
 import subprocess
 import platform
@@ -19,6 +19,7 @@ gpt_key = os.getenv("GPT_KEY")
 
 # Configurer l'instance OpenAI de LangChain
 llm = OpenAI(api_key=gpt_key)
+llm2=ChatOpenAI(model="gpt-4o",temperature=0)
 
 # Fonction pour obtenir le chemin du solveur Choco
 def get_choco_solver_path() -> str:

@@ -1,12 +1,13 @@
 import re
 from ortools.sat.python import cp_model
-from config import llm
+from config import llm,llm2
 import ast
 import os
 import sys
 import pulp
 from config import get_choco_solver_path
-
+import json
+from pysat.solvers import Solver
 choco_solver_path = get_choco_solver_path()
 
 # Fonction pour envoyer un prompt à ChatGPT et obtenir la réponse
@@ -72,6 +73,48 @@ def get_solver_sudoku_input(problem_statement: str) -> str:
     response = llm.invoke(prompt)  # Utilisation de invoke
     return response
 
+def get_planning_sat_input(problem_statement: str) -> str:
+    """
+    Envoie un prompt à ChatGPT et obtient la réponse pour un problème de planification.
+
+    Args:
+    - problem_statement (str): La description du problème de planification en français.
+
+    Returns:
+    - response (str): La réponse de ChatGPT contenant les variables et les contraintes en clauses CNF.
+    """
+    prompt = f"""
+    Vous allez recevoir un problème de planification sous forme de texte. Votre tâche est de modéliser ce problème en variables et contraintes booléennes sous forme de SAT. Veuillez suivre les étapes suivantes :
+
+    1. Identifiez les variables de planification et leurs domaines possibles.
+    2. Définissez chaque variable en tant que variable booléenne.
+    3. Énoncez les contraintes en utilisant la logique booléenne.
+    4. Retournez les variables et les contraintes sous forme de clauses CNF, où chaque clause est une liste de littéraux et la formule entière est une liste de clauses.
+
+    Format de la sortie attendu :
+    {{
+        "Variables": {{
+            "X1": "Le cours C1 est planifié à l'horaire H1",
+            "X2": "Le cours C1 est planifié à l'horaire H2",
+            "X3": "Le cours C2 est planifié à l'horaire H1",
+            "X4": "Le cours C2 est planifié à l'horaire H2"
+        }},
+        "Clauses CNF": [
+            [1, -2],
+            [3, -4],
+            [-1, -3],
+            [-2, -4]
+        ]
+    }}
+
+    Voici le problème de planification :
+    "{problem_statement}"
+
+    """
+
+    response = llm2.invoke(prompt)  # Utilisation de invoke
+    return response.content
+
 # Fonction pour parser la réponse de ChatGPT CSP et extraire les variables et contraintes
 def parse_response_probleme_csp(response: str) -> tuple[list[str], list[str]]:
     """
@@ -99,7 +142,32 @@ def parse_response_probleme_csp(response: str) -> tuple[list[str], list[str]]:
     else:
         # Si aucune correspondance n'a été trouvée, renvoyer des valeurs par défaut
         return [], []
+def parse_json_response(response: str) -> tuple[dict, list[list[int]]]:
+    """
+    Parse la réponse de ChatGPT pour extraire les variables et les contraintes.
 
+    Args:
+    - response (str): La réponse de ChatGPT.
+
+    Returns:
+    - tuple: Une tuple contenant le dictionnaire des variables et la liste des contraintes.
+    """
+# Extraire la partie JSON du texte en utilisant les caractères backtick comme délimiteurs
+    json_pattern = re.compile(r'json(.*?)`', re.DOTALL)
+    json_match = json_pattern.search(response)
+    if json_match:
+        json_str = json_match.group(1)
+    else:
+        raise ValueError("Aucun contenu JSON trouvé dans la réponse de ChatGPT.")
+
+    # Supprimer les commentaires du JSON
+    json_str = re.sub(r'//.*', '', json_str)
+
+    # Parsing de la réponse JSON nettoyée
+    response = json.loads(json_str)
+    variables = response["Variables"]
+    clauses = response["Clauses CNF"]
+    return variables, clauses
 #Fonction pour résoudre le problème CSP en utilisant les variables et les contraintes fournies
 def solver_csp(variables: list[str], constraints: list[str]) -> str:
     """
@@ -239,3 +307,24 @@ def parse_sudoku_grid(sudoku_string: str) -> tuple[tuple[int, ...], ...]:
         if row:  # Ajoute cette condition pour ignorer les lignes vides
             grid.append(tuple(row))
     return tuple(grid)
+# Utilisation de PySAT pour résoudre le problème SAT
+def solve_sat(clauses):
+    with Solver(name='glucose3') as solver:
+        for clause in clauses:
+            solver.add_clause(clause)
+        
+        if solver.solve():
+            model = solver.get_model()
+            return model
+        else:
+            return None
+
+def afficher_solution(solution, variables):
+    if solution:
+        result = "La formule est satisfiable. Une assignation possible est :\n"
+        for var in solution:
+            if var > 0:
+                result += f"{var}: {variables['X' + str(var)]}\n"
+        return result.strip()
+    else:
+        return "La formule n'est pas satisfiable."

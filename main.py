@@ -1,7 +1,8 @@
 from solver import get_solver_input, parse_response_probleme_csp, solver_csp, parse_sudoku_grid, solver_sudoku_with_pulp, get_solver_sudoku_input
 import praw
+from solver import get_planning_sat_input, parse_json_response, solve_sat, afficher_solution
 from utils import print_post_details
-from config import username, client_id, client_secret, password, openai_api_key, gpt_key, llm, install_glpk_package
+from config import username, client_id, client_secret, password, openai_api_key, gpt_key, llm, install_glpk_package,llm2
 from timeit import default_timer as timer
 import numpy as np
 # install_glpk_package() # Installer le paquet GLPK
@@ -26,10 +27,10 @@ def solve_csp_reddit(problem_statement: str) -> str:
     solution = solver_csp(variables, constraints)
     if solution != "\nAucune solution trouvée.\n":
         final_prompt = f"La solution au problème est la suivante: {solution}. Reformulez la réponse pour qu'elle soit bien présentée."
-        final_response = llm.invoke(final_prompt.format(solution=solution))
+        final_response = llm2.invoke(final_prompt.format(solution=solution)).content
     else:
         final_prompt = f"Voici le problème: {problem_statement}\n Résout le problème s'il te plaît."
-        final_response = llm.invoke(final_prompt)
+        final_response = llm2.invoke(final_prompt).content
     return final_response
 
 # Définir la fonction pour résoudre les sudokus sur Reddit
@@ -45,6 +46,19 @@ def solve_sudoku_reddit(problem_statement: str) -> str:
     # final_response = llm.invoke(final_prompt.format(solution=solution))
     final_response = solution
     return final_response
+def solve_plan_reddit(problem_statement: str) -> str:
+    response = get_planning_sat_input(problem_statement)
+    variables, clauses = parse_json_response(response)
+    print("VARIABLES : ", variables)
+    print("CLAUSES : ", clauses)
+    solution1 = solve_sat(clauses)
+    solution2 = afficher_solution(solution1,variables)
+    print("SOLUTION : ", solution2)
+    final_prompt = f"Voici la question initial : {problem_statement}.La solution au problème est la suivante: {solution2}. Reformulez la réponse pour qu'elle soit bien présentée."
+    final_response = llm2.invoke(final_prompt.format(solution=solution2)).content
+    print("final_response : ", final_response)
+    return final_response
+
 
 for post in subreddit.stream.submissions(skip_existing=True):
     if post.title.endswith("probleme"):
@@ -52,12 +66,18 @@ for post in subreddit.stream.submissions(skip_existing=True):
         problem_statement = post.selftext
         response = solve_csp_reddit(problem_statement)
         post.reply(response)
+    if post.title.endswith("Plan"):
+        print_post_details(post)
+        problem_statement = post.selftext
+        response = solve_plan_reddit(problem_statement)
+        post.reply(response)
+        print("Répondu au post.")
     elif post.title.endswith("sudoku"):
         print_post_details(post)
         sudoku_text = post.selftext
         response = solve_sudoku_reddit(sudoku_text)
         post.reply(response)
-    print("Répondu au post.")
+        print("Répondu au post.")
 
 #################################---POUR TESTER SANS REDDIT---######################################
 
